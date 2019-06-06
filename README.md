@@ -3,11 +3,15 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/ProofShow/ProofShowCheck/badge.svg?targetFile=package.json)](https://snyk.io/test/github/ProofShow/ProofShowCheck?targetFile=package.json)
 [![Build Status](https://travis-ci.com/ProofShow/ProofShowCheck.svg?branch=master)](https://travis-ci.com/ProofShow/ProofShowCheck)
 
-ProofShow Check is a desktop application for checking the validity of ProofShow return receipt. The features of ProofShow Check are:
+ProofShow Check is a desktop app for courier companies and their customers to check the validity of the digital return receipts signed with ProofShow Ack mobile app. Specifically, ProofShow Check, once launched, will do the following:
+- Ask for the unique `receiptID` of a return receipt;
+- Use `receiptID` to download the return receipt;
+- Retrieve the PCCA certificate within the return receipt;
+- Check the validity of the PCCA certificate using [PCCA Verifier](https://github.com/ProofShow/PCCAVerifier);
+- Let Acrobat Reader trust the PCCA certificate if it is valid;
+- Use Acrobat Reader to open and verify the return receipt.
 
-- Checking return receipt with a `receiptID`
-- Checking local return receipt file
-- Integrate with [PCCA Verifier](https://github.com/ProofShow/PCCAVerifier) to verify the signer's certificate
+ProofShow Check is based on [Electron](https://electronjs.org/), and is available on Windows and macOS.
 
 
 ### Requirement
@@ -15,18 +19,20 @@ ProofShow Check is a desktop application for checking the validity of ProofShow 
 
 ### How to build
 ##### On Windows
+To build ProofShow Check on Windows, run the following:
 ```
 npm install
 npm run dist-win
 ```
->Then find `ProofShow Check Installer-[ver].exe` in the `release` directory.
+Then find `ProofShow Check Installer-[ver].exe` in the `release` directory.
 
-##### On MacOS
+##### On macOS
+To build ProofShow Check on macOS, run the following:
 ```
 npm install
 npm run dist-mac
 ```
->Then find `ProofShow Check Installer-[ver].pkg` in the `release` directory.
+Then find `ProofShow Check Installer-[ver].pkg` in the `release` directory.
 
 ### License
 AGPL-3.0-or-later
