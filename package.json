@@ -1,7 +1,7 @@
 {
   "name": "proofshow-check",
   "productName": "ProofShow Check",
-  "version": "0.99.61312",
+  "version": "0.99.61416",
   "description": "Check ProofShow Return Receipt",
   "main": "main.js",
   "homepage": ".",
