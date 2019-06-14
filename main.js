@@ -113,11 +113,11 @@ function initApp() {
 
   // global.mainWindow.webContents.openDevTools();
 
-  // listen "proc-with-receipt-id" event
-  ipcMain.on('proc-with-receipt-id', async function(event, receiptID) {
+  // listen "proc-with-tracking-number" event
+  ipcMain.on('proc-with-tracking-number', async function(event, trackingNum, email) {
     try {
-      // get receipt information by receiptID
-      var receiptInfo = await receiptRetriever.byReceiptID(receiptID);
+      // get receipt information by tracking number
+      var receiptInfo = await receiptRetriever.byTrackingNum(trackingNum, email);
       await checkReceipt(receiptInfo);
 
       setTimeout(function() {

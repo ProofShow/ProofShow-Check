@@ -14,17 +14,19 @@ class App extends Component {
     // initiate component state
     this.state = {
       isMainPage: true,
-      isUseReceiptID: true,
-      receiptID: '',
+      isUseTrackingNum: true,
+      trackingNum: '',
+      email: '',
       isProcessing: false,
       isErrorMsgShow: false
     };
 
     // initiate component handler
-    this.handleReceiptSourceChange  = this.handleReceiptSourceChange.bind(this);
-    this.handleNextButton           = this.handleNextButton.bind(this);
-    this.handelReceiptIDInputChange = this.handelReceiptIDInputChange.bind(this);
-    this.handleReceiptIDSubmit      = this.handleReceiptIDSubmit.bind(this);
+    this.handleReceiptSourceChange       = this.handleReceiptSourceChange.bind(this);
+    this.handleNextButton                = this.handleNextButton.bind(this);
+    this.handleTrackingNumberInputChange = this.handleTrackingNumberInputChange.bind(this);
+    this.handleEmailInputChange          = this.handleEmailInputChange.bind(this);
+    this.handlerTrackingNumberSubmit     = this.handlerTrackingNumberSubmit.bind(this);
   }
 
   /**
@@ -49,10 +51,10 @@ class App extends Component {
    *  Handler for receipt source change
    */
   handleReceiptSourceChange(event, {value}) {
-    if (value === 'byReceiptID')
-      this.setState({isUseReceiptID: true});
+    if (value === 'byTrackingNum')
+      this.setState({isUseTrackingNum: true});
     else
-      this.setState({isUseReceiptID: false});
+      this.setState({isUseTrackingNum: false});
   }
 
   /**
@@ -61,8 +63,8 @@ class App extends Component {
   handleNextButton() {
     var self = this;
 
-    if (this.state.isUseReceiptID) {
-      // go to receiptID page
+    if (this.state.isUseTrackingNum) {
+      // go to tracking number page
       this.setState({isMainPage: false});
     }
     else {
@@ -86,28 +88,39 @@ class App extends Component {
   }
 
   /**
-   *  Handler for receiptID input change
+   *  Handler for tracking number input change
    */
-  handelReceiptIDInputChange(event) {
-    this.setState({receiptID: event.target.value});
+  handleTrackingNumberInputChange(event) {
+    this.setState({trackingNum: event.target.value});
   }
 
   /**
-   *  Handler for receiptID submit
+   * Handler for email input change
    */
-  handleReceiptIDSubmit() {
-    var receiptID = this.state.receiptID;
+   handleEmailInputChange(event) {
+     this.setState({email: event.target.value});
+   }
+
+  /**
+   *  Handler for tracking number submit
+   */
+  handlerTrackingNumberSubmit() {
+    var trackingNum = this.state.trackingNum;
+    var email       = this.state.email;
 
     this.setState({isErrorMsgShow: false});
 
     // check the input is not empty
-    if (receiptID.length === 0) {
-      this.receiptIDInput.focus();
+    if (trackingNum.length === 0) {
+      this.trackingNumInput.focus();
+    }
+    else if (email.length === 0) {
+      this.emailInput.focus();
     } else {
       this.setState({isProcessing: true});
 
-      // send "proc-with-receipt-id" event with receiptID
-      ipcRenderer.send('proc-with-receipt-id', this.state.receiptID);
+      // send "proc-with-tracking-number" event with tracking number
+      ipcRenderer.send('proc-with-tracking-number', this.state.trackingNum, this.state.email);
     }
   }
 
@@ -120,12 +133,12 @@ class App extends Component {
         <Grid centered>
           <Grid.Row style={{paddingTop: '30px'}}>
             <Grid.Column>
-              <Radio style={{color: '#373737', fontSize: '14px', paddingLeft: '80px'}} label='Check a return receipt by receiptID' name='receipt_source' value="byReceiptID" checked={this.state.isUseReceiptID === true} onChange={this.handleReceiptSourceChange} />
+              <Radio style={{color: '#373737', fontSize: '14px', paddingLeft: '80px'}} label='Check a return receipt by tracking number' name='receipt_source' value="byTrackingNum" checked={this.state.isUseTrackingNum === true} onChange={this.handleReceiptSourceChange} />
             </Grid.Column>
           </Grid.Row>
           <Grid.Row style={{paddingBottom: '50px'}}>
             <Grid.Column>
-              <Radio style={{color: '#373737', fontSize: '14px', paddingLeft: '80px'}} label='Check a local PDF return receipt' name='receipt_source' value="byLocalFile" checked={this.state.isUseReceiptID === false} onChange={this.handleReceiptSourceChange} />
+              <Radio style={{color: '#373737', fontSize: '14px', paddingLeft: '80px'}} label='Check a local PDF return receipt' name='receipt_source' value="byLocalFile" checked={this.state.isUseTrackingNum === false} onChange={this.handleReceiptSourceChange} />
             </Grid.Column>
           </Grid.Row>
           <Grid.Row>
@@ -140,29 +153,32 @@ class App extends Component {
   }
 
   /**
-   *  The receiptID page render
+   *  The tracking number page render
    */
-  receiptIDPageRender() {
+  trackingNumPageRender() {
     var isWin = remote.getGlobal('isWin');
     var isMacOS = remote.getGlobal('isMacOS');
 
     return (
       <div className="App">
         <Grid centered>
-          <Grid.Row style={{paddingTop: '30px', paddingBottom: '30px'}}>
+          <Grid.Row style={{marginTop: '-10px', paddingTop: '0px', paddingBottom: '10px'}}>
             <Grid.Column>
-              {isWin && <p style={{color: '#373737', fontSize: '14px'}}>Obtain the <span style={{fontStyle: 'italic'}}>receiptID</span> of a return receipt from your courier company</p>}
-              {isMacOS && <p style={{color: '#373737', fontSize: '14px'}}>Obtain the <span style={{fontStyle: 'italic'}}>receiptID</span> of a return receipt from your courier company</p>}
+              {isWin && <p style={{color: '#373737', fontSize: '14px'}}>Enter the parcel's tracking number and the recipient's email address to check the corresponding digital return receipt</p>}
+              {isMacOS && <p style={{color: '#373737', fontSize: '14px'}}>Enter the parcel's tracking number and the recipient's email address to check the corresponding digital return receipt</p>}
             </Grid.Column>
           </Grid.Row>
           <Grid.Row>
+            <Grid.Column style={{paddingBottom: '5px'}} width="16">
+              <Input placeholder="Enter the tracking number" fluid ref={ref => this.trackingNumInput = ref} onChange={this.handleTrackingNumberInputChange} />
+            </Grid.Column>
             <Grid.Column width="16">
-              <Input placeholder="Enter the receiptID" fluid ref={ref => this.receiptIDInput = ref} onChange={this.handelReceiptIDInputChange} />
+              <Input placeholder="Enter the email address" fluid ref={ref => this.emailInput = ref} onChange={this.handleEmailInputChange} />
             </Grid.Column>
           </Grid.Row>
           <Grid.Row>
             <Grid.Column width="5">
-              <Button style={{color: 'white', backgroundColor: '#7579ff', borderColor: '#7579ff', fontWeight: 'normal'}} fluid loading={this.state.isProcessing} disabled={this.state.isProcessing} onClick={this.handleReceiptIDSubmit} >Check</Button>
+              <Button style={{color: 'white', backgroundColor: '#7579ff', borderColor: '#7579ff', fontWeight: 'normal'}} fluid loading={this.state.isProcessing} disabled={this.state.isProcessing} onClick={this.handlerTrackingNumberSubmit} >Check</Button>
             </Grid.Column>
           </Grid.Row>
           {this.state.isErrorMsgShow && <p style={{color: 'lightcoral'}}>No valid return receipt can be found</p>}
@@ -175,7 +191,7 @@ class App extends Component {
    * Render handler for component
    */
   render() {
-    return this.state.isMainPage ?  this.mainPageRender() : this.receiptIDPageRender();
+    return this.state.isMainPage ?  this.mainPageRender() : this.trackingNumPageRender();
   }
 }
 
