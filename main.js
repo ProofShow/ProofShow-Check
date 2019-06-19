@@ -4,18 +4,37 @@ const fs = require('fs');
 const url = require('url');
 const path = require('path');
 const fetch = require('node-fetch');
-const {app, BrowserWindow, dialog, ipcMain} = require('electron');
+const {app, BrowserWindow, dialog, ipcMain, shell} = require('electron');
 const receiptRetriever = require('./lib/receiptRetriever');
 const certRetriever = require('./lib/certRetriever');
 const acrobatReaderUtil = require('./lib/acrobatReaderUtil');
 const pfValues = require('./lib/proofshowValues');
 const PCCACertChecker = require('pcca-verifier');
+const i18nLang = require('./locale/i18n');
 
+global.i18n = null;
 global.mainWindow = null;
 global.isWin = (os.platform() === 'win32');
 global.isMacOS = (os.platform() === 'darwin');
 global.tmpFolder = path.join(os.tmpdir(), app.getName());
+global.settingFilePath = path.join(app.getPath('userData'), '.setting');
+global.settingData = null;
 global.psesData = null;
+
+/**
+ * Load application setting data
+ */
+async function loadSettingData() {
+  try {
+    global.settingData = JSON.parse(fs.readFileSync(global.settingFilePath).toString());
+  } catch(err) {
+    global.settingData = {locale: 'en'};
+
+    try {
+      fs.writeFileSync(global.settingFilePath, JSON.stringify(global.settingData));
+    } catch(err) {}
+  }
+}
 
 /**
  * Check application if there is new version
@@ -122,18 +141,28 @@ async function checkReceipt(receiptInfo) {
  *  Initaite ProofShow Check application
  */
 async function initApp() {
+  await loadSettingData();
+  global.i18n = new i18nLang(global.settingData.locale);
+
   if (await checkAppUpdate()) {
     dialog.showMessageBox({
       type: 'none',
-      message: 'There is new version for ProofShow Check, please upgrade it.',
-      buttons: ['OK']
+      noLink: true,
+      message: global.i18n.__('warning_app_require_upgrade'),
+      defaultId: global.isWin ? 0 : 1,
+      cancelId: global.isWin ? 1 : 0,
+      buttons: global.isWin ? ['OK', global.i18n.__('btn_cancel')] : [global.i18n.__('btn_cancel'), 'OK']
+    }, function(response) {
+      if ((global.isWin && response === 0) || (global.isMacOS && response === 1))
+        shell.openExternal('https://www.proof.show');
+
+      app.quit();
     });
-    app.quit();
   } else {
     // Create the browser window.
     global.mainWindow = new BrowserWindow({
-      width: 500,
-      height: 300,
+      width: 480,
+      height: 360,
       resizable: false,
       maximizable: false,
       webPreferences: {
@@ -156,10 +185,10 @@ async function initApp() {
     // global.mainWindow.webContents.openDevTools();
 
     // listen "proc-with-tracking-number" event
-    ipcMain.on('proc-with-tracking-number', async function(event, trackingNum, email) {
+    ipcMain.on('proc-with-tracking-number', async function(event, courier, trackingNum, email) {
       try {
         // get receipt information by tracking number
-        var receiptInfo = await receiptRetriever.byTrackingNum(trackingNum, email);
+        var receiptInfo = await receiptRetriever.byTrackingNum(courier, trackingNum, email);
         await checkReceipt(receiptInfo);
 
         setTimeout(function() {
@@ -171,14 +200,14 @@ async function initApp() {
         if (err.code === pfValues.errors.readerNotFound.code) {
           dialog.showMessageBox(global.mainWindow, {
             type: 'none',
-            message: 'This program requires you install Acrobat Reader first.',
+            message: global.i18n.__('warning_acrobat_require_install'),
             buttons: ['OK']
           });
           event.sender.send('proc-finish', null);
         } else if (err.code === pfValues.errors.readerIsOpening.code) {
           dialog.showMessageBox(global.mainWindow, {
             type: 'none',
-            message: 'This program requires you close Acrobat Reader first.',
+            message: global.i18n.__('warning_acrobat_require_close'),
             buttons: ['OK']
           });
           event.sender.send('proc-finish', null);
@@ -205,14 +234,14 @@ async function initApp() {
         if (err.code === pfValues.errors.readerNotFound.code) {
           dialog.showMessageBox(global.mainWindow, {
             type: 'none',
-            message: 'This program requires you install Acrobat Reader first.',
+            message: global.i18n.__('warning_acrobat_require_install'),
             buttons: ['OK']
           });
           event.sender.send('proc-finish', null);
         } else if (err.code === pfValues.errors.readerIsOpening.code) {
           dialog.showMessageBox(global.mainWindow, {
             type: 'none',
-            message: 'This program requires you close Acrobat Reader first.',
+            message: global.i18n.__('warning_acrobat_require_close'),
             buttons: ['OK']
           });
           event.sender.send('proc-finish', null);
@@ -220,6 +249,16 @@ async function initApp() {
           event.sender.send('proc-finish', err);
         }
       }
+    });
+
+    // listen "locale-change" event
+    ipcMain.on('locale-change', async function(event, locale) {
+      global.settingData.locale = locale;
+      global.i18n = new i18nLang(global.settingData.locale);
+
+      try {
+        fs.writeFileSync(global.settingFilePath, JSON.stringify(global.settingData));
+      } catch(err) {}
     });
 
     global.mainWindow.on('closed', function() {

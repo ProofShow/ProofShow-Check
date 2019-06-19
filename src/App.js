@@ -1,8 +1,10 @@
 /* eslint-disable import/first */
 const { ipcRenderer, remote } = window.require('electron');
 import React, { Component } from 'react';
-import { Grid, Input, Button, Radio } from 'semantic-ui-react';
+import { Grid, Input, Button, Radio, Dropdown } from 'semantic-ui-react';
 import './App.css';
+
+const i18n = remote.getGlobal('i18n');
 
 class App extends Component {
   /**
@@ -15,6 +17,8 @@ class App extends Component {
     this.state = {
       isMainPage: true,
       isUseTrackingNum: true,
+      locale: remote.getGlobal('settingData').locale,
+      courier: '3',
       trackingNum: '',
       email: '',
       isProcessing: false,
@@ -23,7 +27,9 @@ class App extends Component {
 
     // initiate component handler
     this.handleReceiptSourceChange       = this.handleReceiptSourceChange.bind(this);
+    this.handleLocaleChange              = this.handleLocaleChange.bind(this);
     this.handleNextButton                = this.handleNextButton.bind(this);
+    this.handlerCourierChange            = this.handlerCourierChange.bind(this);
     this.handleTrackingNumberInputChange = this.handleTrackingNumberInputChange.bind(this);
     this.handleEmailInputChange          = this.handleEmailInputChange.bind(this);
     this.handlerTrackingNumberSubmit     = this.handlerTrackingNumberSubmit.bind(this);
@@ -58,6 +64,14 @@ class App extends Component {
   }
 
   /**
+   * Handler for locale dropdown change
+   */
+  handleLocaleChange(event, {value}) {
+    this.setState({locale: value});
+    ipcRenderer.send('locale-change', value);
+  }
+
+  /**
    *  Handler for next button click
    */
   handleNextButton() {
@@ -85,6 +99,15 @@ class App extends Component {
         }
       });
     }
+  }
+
+  /**
+   *  Handler for courier dropdown change
+   */
+  handlerCourierChange(event, {value}) {
+    console.log(this.state.courier);
+    console.log(value);
+    this.setState({courier: value});
   }
 
   /**
@@ -120,7 +143,7 @@ class App extends Component {
       this.setState({isProcessing: true});
 
       // send "proc-with-tracking-number" event with tracking number
-      ipcRenderer.send('proc-with-tracking-number', this.state.trackingNum, this.state.email);
+      ipcRenderer.send('proc-with-tracking-number', this.state.courier, this.state.trackingNum, this.state.email);
     }
   }
 
@@ -128,25 +151,39 @@ class App extends Component {
    *  The main page render
    */
   mainPageRender() {
+    var langOptions = [
+      {key: 'en', value: 'en', text: 'English'},
+      {key: 'id', value: 'id', text: 'Orang indonesia'},
+      {key: 'ja', value: 'ja', text: '日本語'},
+      {key: 'ko', value: 'ko', text: '한국어'},
+      {key: 'th', value: 'th', text: 'ไทย'},
+      {key: 'vi', value: 'vi', text: 'Tiếng việt'},
+      {key: 'zh-CN', value: 'zh-CN', text: '简体中文'},
+      {key: 'zh-TW', value: 'zh-TW', text: '繁體中文'}
+    ];
+    var localeFontSize = (this.state.locale === 'id') ? '11px' : '14px';
+    var localeLeftPadding = (this.state.locale === 'id') ? '70px' : '75px';
+
     return (
-      <div className="App">
+      <div className="AppMainPage">
+        <Dropdown style={{position: 'relative', top: '-35px', left: '270px', fontWeight: 'normal'}} options={langOptions} value={this.state.locale} onChange={this.handleLocaleChange} scrolling selection button className='mini' />
         <Grid centered>
-          <Grid.Row style={{paddingTop: '30px'}}>
+          <Grid.Row style={{paddingTop: '40px'}}>
             <Grid.Column>
-              <Radio style={{color: '#373737', fontSize: '14px', paddingLeft: '80px'}} label='Check a return receipt by tracking number' name='receipt_source' value="byTrackingNum" checked={this.state.isUseTrackingNum === true} onChange={this.handleReceiptSourceChange} />
+              <Radio style={{color: '#373737', fontSize: localeFontSize, paddingLeft: localeLeftPadding}} label={i18n.__('msg_check_receipt_by_number')} name='receipt_source' value="byTrackingNum" checked={this.state.isUseTrackingNum === true} onChange={this.handleReceiptSourceChange} />
             </Grid.Column>
           </Grid.Row>
-          <Grid.Row style={{paddingBottom: '50px'}}>
+          <Grid.Row style={{paddingBottom: '68px'}}>
             <Grid.Column>
-              <Radio style={{color: '#373737', fontSize: '14px', paddingLeft: '80px'}} label='Check a local PDF return receipt' name='receipt_source' value="byLocalFile" checked={this.state.isUseTrackingNum === false} onChange={this.handleReceiptSourceChange} />
+              <Radio style={{color: '#373737', fontSize: localeFontSize, paddingLeft: localeLeftPadding}} label={i18n.__('msg_check_receipt_by_file')} name='receipt_source' value="byLocalFile" checked={this.state.isUseTrackingNum === false} onChange={this.handleReceiptSourceChange} />
             </Grid.Column>
           </Grid.Row>
           <Grid.Row>
-            <Grid.Column width="5">
-              <Button style={{color: 'white', backgroundColor: '#7579ff', borderColor: '#7579ff', fontWeight: 'normal'}} fluid loading={this.state.isProcessing} disabled={this.state.isProcessing} onClick={this.handleNextButton} >Next</Button>
+            <Grid.Column width="6">
+              <Button style={{color: 'white', backgroundColor: '#7579ff', borderColor: '#7579ff', fontWeight: 'normal', width: "100%"}} fluid loading={this.state.isProcessing} disabled={this.state.isProcessing} onClick={this.handleNextButton} >{i18n.__('btn_next')}</Button>
             </Grid.Column>
           </Grid.Row>
-          {this.state.isErrorMsgShow && <p style={{color: 'lightcoral'}}>No valid return receipt can be found</p>}
+          {this.state.isErrorMsgShow && <p style={{color: 'lightcoral'}}>{i18n.__('warning_no_specified_receipt')}</p>}
         </Grid>
       </div>
     )
@@ -158,30 +195,47 @@ class App extends Component {
   trackingNumPageRender() {
     var isWin = remote.getGlobal('isWin');
     var isMacOS = remote.getGlobal('isMacOS');
+    var courierOptions = [
+      {key: '3', value: '3', text: 'DHL'},
+      {key: '9', value: '9', text: 'EMS'},
+      {key: '2', value: '2', text: 'FedEx'},
+      {key: '1', value: '1', text: 'UPS'},
+      {key: '0', value: '0', text: 'USPS'},
+      {key: '10', value: '10', text: '中華郵政'},
+      {key: '7', value: '7', text: '宅配通'},
+      {key: '6', value: '6', text: '黑貓宅急便'},
+      {key: '4', value: '4', text: '新竹物流'},
+      {key: '5', value: '5', text: '嘉里大榮物流'},
+      {key: '8', value: '8', text: '網家速配'},
+      {key: '11', value: '11', text: '顺丰速运'},
+    ];
 
     return (
-      <div className="App">
+      <div className="AppNumberpage">
         <Grid centered>
           <Grid.Row style={{marginTop: '-10px', paddingTop: '0px', paddingBottom: '10px'}}>
             <Grid.Column>
-              {isWin && <p style={{color: '#373737', fontSize: '14px'}}>Enter the parcel's tracking number and the recipient's email address to check the corresponding digital return receipt</p>}
-              {isMacOS && <p style={{color: '#373737', fontSize: '14px'}}>Enter the parcel's tracking number and the recipient's email address to check the corresponding digital return receipt</p>}
+              {isWin && <p style={{color: '#373737', fontSize: '14px', height: '40px'}}>{i18n.__('msg_enter_number_description')}</p>}
+              {isMacOS && <p style={{color: '#373737', fontSize: '14px', height: '40px'}}>{i18n.__('msg_enter_number_description')}</p>}
             </Grid.Column>
           </Grid.Row>
           <Grid.Row>
             <Grid.Column style={{paddingBottom: '5px'}} width="16">
-              <Input placeholder="Enter the tracking number" fluid ref={ref => this.trackingNumInput = ref} onChange={this.handleTrackingNumberInputChange} />
+              <Dropdown options={courierOptions} value={this.state.courier} onChange={this.handlerCourierChange} scrolling fluid selection/>
             </Grid.Column>
-            <Grid.Column width="16">
-              <Input placeholder="Enter the email address" fluid ref={ref => this.emailInput = ref} onChange={this.handleEmailInputChange} />
+            <Grid.Column style={{paddingBottom: '5px'}} width="16">
+              <Input placeholder={i18n.__('msg_enter_number_placeholder')} fluid ref={ref => this.trackingNumInput = ref} onChange={this.handleTrackingNumberInputChange} />
+            </Grid.Column>
+            <Grid.Column width="16" style={{paddingBottom: '15px'}}>
+              <Input placeholder={i18n.__('msg_enter_email_placeholder')} fluid ref={ref => this.emailInput = ref} onChange={this.handleEmailInputChange} />
             </Grid.Column>
           </Grid.Row>
           <Grid.Row>
-            <Grid.Column width="5">
-              <Button style={{color: 'white', backgroundColor: '#7579ff', borderColor: '#7579ff', fontWeight: 'normal'}} fluid loading={this.state.isProcessing} disabled={this.state.isProcessing} onClick={this.handlerTrackingNumberSubmit} >Check</Button>
+            <Grid.Column width="6">
+              <Button style={{color: 'white', backgroundColor: '#7579ff', borderColor: '#7579ff', fontWeight: 'normal', width: "90%"}} fluid loading={this.state.isProcessing} disabled={this.state.isProcessing} onClick={this.handlerTrackingNumberSubmit} >{i18n.__('btn_check')}</Button>
             </Grid.Column>
           </Grid.Row>
-          {this.state.isErrorMsgShow && <p style={{color: 'lightcoral'}}>No valid return receipt can be found</p>}
+          {this.state.isErrorMsgShow && <p style={{color: 'lightcoral'}}>{i18n.__('warning_no_specified_receipt')}</p>}
         </Grid>
       </div>
     );

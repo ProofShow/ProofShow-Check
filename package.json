@@ -1,7 +1,7 @@
 {
   "name": "proofshow-check",
   "productName": "ProofShow Check",
-  "version": "0.99.61716",
+  "version": "0.99.61917",
   "description": "Check ProofShow Return Receipt",
   "main": "main.js",
   "homepage": ".",
@@ -22,6 +22,7 @@
       "resources/",
       "build/",
       "lib/",
+      "locale/",
       "main.js",
       "package.json"
     ],
@@ -31,7 +32,7 @@
       "perMachine": true,
       "runAfterFinish": false,
       "createDesktopShortcut": true,
-      "deleteAppDataOnUninstall": true
+      "deleteAppDataOnUninstall": false
     },
     "win": {
       "icon": "resources/icon.ico",
