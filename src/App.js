@@ -41,6 +41,35 @@ class App extends Component {
   componentDidMount() {
     var self = this;
 
+    // listen the "check-acrobat-finish" event
+    ipcRenderer.on('check-acrobat-finish', function(event, isPass) {
+      self.setState({isProcessing: false});
+
+      if (isPass) {
+        if (self.state.isUseTrackingNum) {
+          // go to tracking number page
+          self.setState({isMainPage: false});
+        }
+        else {
+          // show file dialog
+          remote.dialog.showOpenDialog(remote.getCurrentWindow(), {filters: [{name: 'PDF', extensions: ['pdf']}], properties: ['openFile']}, async function(filePaths) {
+            if (filePaths && filePaths.length > 0) {
+              try {
+                self.setState({isProcessing: true});
+
+                // send "proc-with-local-file" event with file path
+                ipcRenderer.send('proc-with-local-file', filePaths[0]);
+              } catch (err) {
+                console.log(err);
+              }
+            } else {
+              console.log('cancel');
+            }
+          });
+        }
+      }
+    });
+
     // listen the "proc-finish" event
     ipcRenderer.on('proc-finish', function(event, error) {
       // set the processing falg to false
@@ -75,30 +104,9 @@ class App extends Component {
    *  Handler for next button click
    */
   handleNextButton() {
-    var self = this;
-
-    if (this.state.isUseTrackingNum) {
-      // go to tracking number page
-      this.setState({isMainPage: false});
-    }
-    else {
-      // show file dialog
-      remote.dialog.showOpenDialog(remote.getCurrentWindow(), {filters: [{name: 'PDF', extensions: ['pdf']}], properties: ['openFile']}, async function(filePaths) {
-        if (filePaths && filePaths.length > 0) {
-          try {
-            self.setState({isErrorMsgShow: false});
-            self.setState({isProcessing: true});
-
-            // send "proc-with-local-file" event with file path
-            ipcRenderer.send('proc-with-local-file', filePaths[0]);
-          } catch (err) {
-            console.log(err);
-          }
-        } else {
-          console.log('cancel');
-        }
-      });
-    }
+    this.setState({isErrorMsgShow: false});
+    this.setState({isProcessing: true});
+    ipcRenderer.send('check-acrobat');
   }
 
   /**

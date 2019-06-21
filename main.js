@@ -144,127 +144,163 @@ async function initApp() {
   await loadSettingData();
   global.i18n = new i18nLang(global.settingData.locale);
 
-  if (await checkAppUpdate()) {
-    dialog.showMessageBox({
-      type: 'none',
-      noLink: true,
-      message: global.i18n.__('warning_app_require_upgrade'),
-      defaultId: global.isWin ? 0 : 1,
-      cancelId: global.isWin ? 1 : 0,
-      buttons: global.isWin ? ['OK', global.i18n.__('btn_cancel')] : [global.i18n.__('btn_cancel'), 'OK']
-    }, function(response) {
-      if ((global.isWin && response === 0) || (global.isMacOS && response === 1))
-        shell.openExternal('https://www.proof.show');
-
-      app.quit();
-    });
-  } else {
-    // Create the browser window.
-    global.mainWindow = new BrowserWindow({
-      width: 480,
-      height: 360,
-      resizable: false,
-      maximizable: false,
-      webPreferences: {
-        nodeIntegration: true,
-        devTools: false
-      }
-    });
-    global.mainWindow.setMenuBarVisibility(false);
-
-    if (process.env.NODE_ENV === 'development')
-      global.mainWindow.loadURL('http://localhost:3000/');
-    else {
-      global.mainWindow.loadURL(url.format({
-        pathname: path.join(__dirname, 'build', 'index.html'),
-        protocol: 'file:',
-        slashes: true
-      }));
+  // Create the browser window.
+  global.mainWindow = new BrowserWindow({
+    show: false,
+    width: 480,
+    height: 360,
+    resizable: false,
+    maximizable: false,
+    webPreferences: {
+      nodeIntegration: true,
+      devTools: false
     }
+  });
+  global.mainWindow.setMenuBarVisibility(false);
 
-    // global.mainWindow.webContents.openDevTools();
-
-    // listen "proc-with-tracking-number" event
-    ipcMain.on('proc-with-tracking-number', async function(event, courier, trackingNum, email) {
-      try {
-        // get receipt information by tracking number
-        var receiptInfo = await receiptRetriever.byTrackingNum(courier, trackingNum, email);
-        await checkReceipt(receiptInfo);
-
-        setTimeout(function() {
-          // send "proc-finish" event
-          event.sender.send('proc-finish', null);
-          global.mainWindow.close();
-        }, 1000);
-      } catch (err) {
-        if (err.code === pfValues.errors.readerNotFound.code) {
-          dialog.showMessageBox(global.mainWindow, {
-            type: 'none',
-            message: global.i18n.__('warning_acrobat_require_install'),
-            buttons: ['OK']
-          });
-          event.sender.send('proc-finish', null);
-        } else if (err.code === pfValues.errors.readerIsOpening.code) {
-          dialog.showMessageBox(global.mainWindow, {
-            type: 'none',
-            message: global.i18n.__('warning_acrobat_require_close'),
-            buttons: ['OK']
-          });
-          event.sender.send('proc-finish', null);
-        } else {
-          console.log(err);
-          event.sender.send('proc-finish', err);
-        }
-      }
-    });
-
-    // listen "proc-with-local-file" event
-    ipcMain.on('proc-with-local-file', async function(event, filePath) {
-      try {
-        // get receipt information by file path
-        var receiptInfo = await receiptRetriever.byLocalFile(filePath);
-        await checkReceipt(receiptInfo);
-
-        setTimeout(function() {
-          // send "proc-finish" event
-          event.sender.send('proc-finish', null);
-          global.mainWindow.close();
-        }, 1000);
-      } catch (err) {
-        if (err.code === pfValues.errors.readerNotFound.code) {
-          dialog.showMessageBox(global.mainWindow, {
-            type: 'none',
-            message: global.i18n.__('warning_acrobat_require_install'),
-            buttons: ['OK']
-          });
-          event.sender.send('proc-finish', null);
-        } else if (err.code === pfValues.errors.readerIsOpening.code) {
-          dialog.showMessageBox(global.mainWindow, {
-            type: 'none',
-            message: global.i18n.__('warning_acrobat_require_close'),
-            buttons: ['OK']
-          });
-          event.sender.send('proc-finish', null);
-        } else {
-          event.sender.send('proc-finish', err);
-        }
-      }
-    });
-
-    // listen "locale-change" event
-    ipcMain.on('locale-change', async function(event, locale) {
-      global.settingData.locale = locale;
-      global.i18n = new i18nLang(global.settingData.locale);
-
-      try {
-        fs.writeFileSync(global.settingFilePath, JSON.stringify(global.settingData));
-      } catch(err) {}
-    });
-
-    global.mainWindow.on('closed', function() {
-      global.mainWindow = null;
-    });
+  if (process.env.NODE_ENV === 'development')
+    global.mainWindow.loadURL('http://localhost:3000/');
+  else {
+    global.mainWindow.loadURL(url.format({
+      pathname: path.join(__dirname, 'build', 'index.html'),
+      protocol: 'file:',
+      slashes: true
+    }));
   }
+
+  // global.mainWindow.webContents.openDevTools();
+
+  global.mainWindow.once('ready-to-show', async function() {
+    global.mainWindow.show();
+
+    if (await checkAppUpdate()) {
+      dialog.showMessageBox(global.mainWindow, {
+        type: 'none',
+        noLink: true,
+        message: global.i18n.__('warning_app_require_upgrade'),
+        defaultId: global.isWin ? 0 : 1,
+        cancelId: global.isWin ? 1 : 0,
+        buttons: global.isWin ? ['OK', global.i18n.__('btn_cancel')] : [global.i18n.__('btn_cancel'), 'OK']
+      }, function(response) {
+        if ((global.isWin && response === 0) || (global.isMacOS && response === 1))
+          shell.openExternal(global.isWin ? 'https://check.proof.show/download/windows/ProofShowCheckInstaller.exe' : 'https://check.proof.show/download/macos/ProofShowCheckInstaller.pkg');
+
+        process.nextTick(function() {
+          global.mainWindow.close();
+        });
+      });
+    } else {
+      // listen "check-acrobat" event
+      ipcMain.on('check-acrobat', async function(event) {
+        try {
+          // check Acrobat reader status
+          await acrobatReaderUtil.checkAcrobatReader();
+
+          event.sender.send('check-acrobat-finish', true);
+        } catch(err) {
+          if (err.code === pfValues.errors.readerNotFound.code) {
+            dialog.showMessageBox(global.mainWindow, {
+              type: 'none',
+              message: global.i18n.__('warning_acrobat_require_install'),
+              buttons: ['OK']
+            });
+            event.sender.send('check-acrobat-finish', false);
+          } else if (err.code === pfValues.errors.readerIsOpening.code) {
+            dialog.showMessageBox(global.mainWindow, {
+              type: 'none',
+              message: global.i18n.__('warning_acrobat_require_close'),
+              buttons: ['OK']
+            });
+            event.sender.send('check-acrobat-finish', false);
+          } else {
+            console.log(err);
+            event.sender.send('check-acrobat-finish', false);
+          }
+        }
+      });
+
+      // listen "proc-with-tracking-number" event
+      ipcMain.on('proc-with-tracking-number', async function(event, courier, trackingNum, email) {
+        try {
+          // get receipt information by tracking number
+          var receiptInfo = await receiptRetriever.byTrackingNum(courier, trackingNum, email);
+          await checkReceipt(receiptInfo);
+
+          setTimeout(function() {
+            // send "proc-finish" event
+            event.sender.send('proc-finish', null);
+            global.mainWindow.close();
+          }, 1000);
+        } catch (err) {
+          if (err.code === pfValues.errors.readerNotFound.code) {
+            dialog.showMessageBox(global.mainWindow, {
+              type: 'none',
+              message: global.i18n.__('warning_acrobat_require_install'),
+              buttons: ['OK']
+            });
+            event.sender.send('proc-finish', null);
+          } else if (err.code === pfValues.errors.readerIsOpening.code) {
+            dialog.showMessageBox(global.mainWindow, {
+              type: 'none',
+              message: global.i18n.__('warning_acrobat_require_close'),
+              buttons: ['OK']
+            });
+            event.sender.send('proc-finish', null);
+          } else {
+            console.log(err);
+            event.sender.send('proc-finish', err);
+          }
+        }
+      });
+
+      // listen "proc-with-local-file" event
+      ipcMain.on('proc-with-local-file', async function(event, filePath) {
+        try {
+          // get receipt information by file path
+          var receiptInfo = await receiptRetriever.byLocalFile(filePath);
+          await checkReceipt(receiptInfo);
+
+          setTimeout(function() {
+            // send "proc-finish" event
+            event.sender.send('proc-finish', null);
+            global.mainWindow.close();
+          }, 1000);
+        } catch (err) {
+          if (err.code === pfValues.errors.readerNotFound.code) {
+            dialog.showMessageBox(global.mainWindow, {
+              type: 'none',
+              message: global.i18n.__('warning_acrobat_require_install'),
+              buttons: ['OK']
+            });
+            event.sender.send('proc-finish', null);
+          } else if (err.code === pfValues.errors.readerIsOpening.code) {
+            dialog.showMessageBox(global.mainWindow, {
+              type: 'none',
+              message: global.i18n.__('warning_acrobat_require_close'),
+              buttons: ['OK']
+            });
+            event.sender.send('proc-finish', null);
+          } else {
+            event.sender.send('proc-finish', err);
+          }
+        }
+      });
+
+      // listen "locale-change" event
+      ipcMain.on('locale-change', async function(event, locale) {
+        global.settingData.locale = locale;
+        global.i18n = new i18nLang(global.settingData.locale);
+
+        try {
+          fs.writeFileSync(global.settingFilePath, JSON.stringify(global.settingData));
+        } catch(err) {}
+      });
+
+      global.mainWindow.on('closed', function() {
+        global.mainWindow = null;
+      });
+    }
+  });
 }
 
 // make application as single instance
