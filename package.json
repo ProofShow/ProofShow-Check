@@ -1,7 +1,7 @@
 {
   "name": "proofshow-check",
   "productName": "ProofShow Check",
-  "version": "0.99.62117",
+  "version": "1.0.62816",
   "description": "Check ProofShow Return Receipt",
   "main": "main.js",
   "homepage": ".",
@@ -38,18 +38,12 @@
       "icon": "resources/icon.ico",
       "target": [
         "nsis"
-      ],
-      "extraResources": [
-        "resources"
       ]
     },
     "mac": {
       "icon": "resources/icon.icns",
       "target": [
         "pkg"
-      ],
-      "extraResources": [
-        "resources"
       ]
     },
     "directories": {
