@@ -18,21 +18,49 @@ class App extends Component {
       isMainPage: true,
       isUseTrackingNum: true,
       locale: remote.getGlobal('settingData').locale,
-      courier: '3',
+      country: '',
+      courier: '',
       trackingNum: '',
       email: '',
       isProcessing: false,
-      isErrorMsgShow: false
+      isErrorMsgShow: false,
     };
 
     // initiate component handler
     this.handleReceiptSourceChange       = this.handleReceiptSourceChange.bind(this);
     this.handleLocaleChange              = this.handleLocaleChange.bind(this);
     this.handleNextButton                = this.handleNextButton.bind(this);
+    this.handleCountryChange             = this.handleCountryChange.bind(this);
     this.handlerCourierChange            = this.handlerCourierChange.bind(this);
     this.handleTrackingNumberInputChange = this.handleTrackingNumberInputChange.bind(this);
     this.handleEmailInputChange          = this.handleEmailInputChange.bind(this);
     this.handlerTrackingNumberSubmit     = this.handlerTrackingNumberSubmit.bind(this);
+
+    // initiate country options
+    this.countryOptions = [];
+    remote.getGlobal('countries').forEach(function(country) {
+      this.countryOptions.push({
+        key: country.countryCode,
+        value: country.countryCode,
+        flag: country.countryCode,
+        text: country.name
+      });
+    }.bind(this));
+
+    // initiate courier options
+    this.courierOptions = [];
+
+    // initiate locale country mapping
+    this.localeCountryMapping = {
+      'en': 'us',
+      'id': 'id',
+      'ja': 'jp',
+      'ko': 'kr',
+      'th': 'th',
+      'vi': 'vn',
+      'zh-CN': 'cn',
+      'zh-TW': 'tw'
+    };
   }
 
   /**
@@ -48,6 +76,9 @@ class App extends Component {
       if (isPass) {
         if (self.state.isUseTrackingNum) {
           // go to tracking number page
+          self.courierOptions = self.genCourierOptions(self.localeCountryMapping[self.state.locale]);
+          self.setState({courier: self.courierOptions[0].value});
+          self.setState({country: self.localeCountryMapping[self.state.locale]});
           self.setState({isMainPage: false});
         }
         else {
@@ -83,6 +114,25 @@ class App extends Component {
   }
 
   /**
+   * Generate courier options
+   */
+   genCourierOptions(countryCode) {
+     var couriers = remote.getGlobal('couriers');
+     var countryCouriers = couriers[countryCode] ? couriers[countryCode] : couriers.default;
+     var courierOptions = [];
+
+     countryCouriers.forEach(function(courier) {
+       courierOptions.push({
+         key: courier.code,
+         value: courier.code,
+         text: courier.name
+       });
+     });
+
+     return courierOptions;
+   }
+
+  /**
    *  Handler for receipt source change
    */
   handleReceiptSourceChange(event, {value}) {
@@ -110,11 +160,21 @@ class App extends Component {
   }
 
   /**
+   *  Handler for counrty dropdown change
+   */
+  handleCountryChange(event, {value}) {
+    var couriers = remote.getGlobal('couriers');
+    var countryCouriers = couriers[value] ? couriers[value] : couriers.default;
+
+    this.courierOptions = this.genCourierOptions(value);
+    this.setState({courier: countryCouriers[0].code});
+    this.setState({country: value});
+  }
+
+  /**
    *  Handler for courier dropdown change
    */
   handlerCourierChange(event, {value}) {
-    console.log(this.state.courier);
-    console.log(value);
     this.setState({courier: value});
   }
 
@@ -203,20 +263,6 @@ class App extends Component {
   trackingNumPageRender() {
     var isWin = remote.getGlobal('isWin');
     var isMacOS = remote.getGlobal('isMacOS');
-    var courierOptions = [
-      {key: '3', value: '3', text: 'DHL'},
-      {key: '9', value: '9', text: 'EMS'},
-      {key: '2', value: '2', text: 'FedEx'},
-      {key: '1', value: '1', text: 'UPS'},
-      {key: '0', value: '0', text: 'USPS'},
-      {key: '10', value: '10', text: '中華郵政'},
-      {key: '7', value: '7', text: '宅配通'},
-      {key: '6', value: '6', text: '黑貓宅急便'},
-      {key: '4', value: '4', text: '新竹物流'},
-      {key: '5', value: '5', text: '嘉里大榮物流'},
-      {key: '8', value: '8', text: '網家速配'},
-      {key: '11', value: '11', text: '顺丰速运'},
-    ];
 
     return (
       <div className="AppNumberpage">
@@ -228,8 +274,11 @@ class App extends Component {
             </Grid.Column>
           </Grid.Row>
           <Grid.Row>
-            <Grid.Column style={{paddingBottom: '5px'}} width="16">
-              <Dropdown options={courierOptions} value={this.state.courier} onChange={this.handlerCourierChange} scrolling fluid selection/>
+            <Grid.Column style={{paddingBottom: '5px'}} width="8">
+              <Dropdown options={this.countryOptions} value={this.state.country} onChange={this.handleCountryChange} scrolling fluid selection/>
+            </Grid.Column>
+            <Grid.Column style={{paddingBottom: '5px'}} width="8">
+              <Dropdown options={this.courierOptions} value={this.state.courier} onChange={this.handlerCourierChange} scrolling fluid selection/>
             </Grid.Column>
             <Grid.Column style={{paddingBottom: '5px'}} width="16">
               <Input placeholder={i18n.__('msg_enter_number_placeholder')} fluid ref={ref => this.trackingNumInput = ref} onChange={this.handleTrackingNumberInputChange} />

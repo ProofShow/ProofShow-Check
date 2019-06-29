@@ -20,6 +20,8 @@ global.tmpFolder = path.join(os.tmpdir(), app.getName());
 global.settingFilePath = path.join(app.getPath('userData'), '.setting');
 global.settingData = null;
 global.psesData = null;
+global.countries = require('./resources/countries.json').countries;
+global.couriers = require('./resources/couriers.json').couriers;
 
 /**
  * Load application setting data

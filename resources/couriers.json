@@ -1,0 +1,95 @@
+{
+  "couriers": {
+    "default": [{
+        "code": "3",
+        "name": "DHL"
+      },
+      {
+        "code": "9",
+        "name": "EMS"
+      },
+      {
+        "code": "2",
+        "name": "FedEx"
+      },
+      {
+        "code": "1",
+        "name": "UPS"
+      },
+      {
+        "code": "0",
+        "name": "USPS"
+      }
+    ],
+    "us": [{
+        "code": "3",
+        "name": "DHL"
+      },
+      {
+        "code": "9",
+        "name": "EMS"
+      },
+      {
+        "code": "2",
+        "name": "FedEx"
+      },
+      {
+        "code": "1",
+        "name": "UPS"
+      },
+      {
+        "code": "0",
+        "name": "USPS"
+      }
+    ],
+    "tw": [{
+        "code": "3",
+        "name": "DHL"
+      },
+      {
+        "code": "9",
+        "name": "EMS"
+      },
+      {
+        "code": "2",
+        "name": "FedEx"
+      },
+      {
+        "code": "1",
+        "name": "UPS"
+      },
+      {
+        "code": "0",
+        "name": "USPS"
+      },
+      {
+        "code": "10",
+        "name": "中華郵政"
+      },
+      {
+        "code": "7",
+        "name": "宅配通"
+      },
+      {
+        "code": "6",
+        "name": "黑貓宅急便"
+      },
+      {
+        "code": "4",
+        "name": "新竹物流"
+      },
+      {
+        "code": "5",
+        "name": "嘉里大榮物流"
+      },
+      {
+        "code": "8",
+        "name": "網家速配"
+      },
+      {
+        "code": "11",
+        "name": "顺丰速运"
+      }
+    ]
+  }
+}
