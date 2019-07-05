@@ -1,0 +1,76 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+version: v1.13.5
+ignore: {}
+# patches apply the minimum changes required to fix a vulnerability
+patch:
+  SNYK-JS-LODASH-450202:
+    - semantic-ui-react > lodash:
+        patched: '2019-07-05T03:06:27.567Z'
+    - pcca-verifier > snyk > lodash:
+        patched: '2019-07-05T03:06:27.567Z'
+    - pcca-verifier > snyk > @snyk/dep-graph > lodash:
+        patched: '2019-07-05T03:01:33.517Z'
+      pcca-verifier > html-to-text > lodash:
+        patched: '2019-07-05T03:06:27.567Z'
+    - pcca-verifier > snyk > inquirer > lodash:
+        patched: '2019-07-05T03:01:33.517Z'
+      snyk > snyk-nuget-plugin > lodash:
+        patched: '2019-07-05T03:06:27.567Z'
+    - pcca-verifier > snyk > snyk-mvn-plugin > lodash:
+        patched: '2019-07-05T03:01:33.517Z'
+      snyk > snyk-nodejs-lockfile-parser > lodash:
+        patched: '2019-07-05T03:06:27.567Z'
+    - pcca-verifier > html-to-text > lodash:
+        patched: '2019-07-05T03:01:33.517Z'
+      snyk > snyk-mvn-plugin > lodash:
+        patched: '2019-07-05T03:06:27.567Z'
+    - pcca-verifier > snyk > snyk-nuget-plugin > lodash:
+        patched: '2019-07-05T03:01:33.517Z'
+      snyk > @snyk/dep-graph > lodash:
+        patched: '2019-07-05T03:06:27.567Z'
+    - pcca-verifier > snyk > snyk-config > lodash:
+        patched: '2019-07-05T03:01:33.517Z'
+      snyk > snyk-config > lodash:
+        patched: '2019-07-05T03:06:27.567Z'
+    - pcca-verifier > snyk > snyk-nodejs-lockfile-parser > graphlib > lodash:
+        patched: '2019-07-05T03:01:33.517Z'
+      snyk > inquirer > lodash:
+        patched: '2019-07-05T03:06:27.567Z'
+    - pcca-verifier > snyk > @snyk/dep-graph > graphlib > lodash:
+        patched: '2019-07-05T03:01:33.517Z'
+      pcca-verifier > snyk > inquirer > lodash:
+        patched: '2019-07-05T03:06:27.567Z'
+    - pcca-verifier > snyk > snyk-php-plugin > @snyk/composer-lockfile-parser > lodash:
+        patched: '2019-07-05T03:01:33.517Z'
+      pcca-verifier > snyk > snyk-config > lodash:
+        patched: '2019-07-05T03:06:27.567Z'
+    - pcca-verifier > snyk > snyk-go-plugin > graphlib > lodash:
+        patched: '2019-07-05T03:01:33.517Z'
+      snyk > lodash:
+        patched: '2019-07-05T03:06:27.567Z'
+    - pcca-verifier > snyk > snyk-nodejs-lockfile-parser > lodash:
+        patched: '2019-07-05T03:01:33.517Z'
+      snyk > snyk-go-plugin > graphlib > lodash:
+        patched: '2019-07-05T03:06:27.567Z'
+    - pcca-verifier > snyk > snyk-mvn-plugin > lodash:
+        patched: '2019-07-05T03:06:27.567Z'
+    - snyk > snyk-nodejs-lockfile-parser > graphlib > lodash:
+        patched: '2019-07-05T03:06:27.567Z'
+    - pcca-verifier > snyk > snyk-nodejs-lockfile-parser > lodash:
+        patched: '2019-07-05T03:06:27.567Z'
+    - pcca-verifier > snyk > @snyk/dep-graph > lodash:
+        patched: '2019-07-05T03:06:27.567Z'
+    - pcca-verifier > snyk > snyk-nuget-plugin > lodash:
+        patched: '2019-07-05T03:06:27.567Z'
+    - snyk > snyk-php-plugin > @snyk/composer-lockfile-parser > lodash:
+        patched: '2019-07-05T03:06:27.567Z'
+    - pcca-verifier > snyk > snyk-php-plugin > @snyk/composer-lockfile-parser > lodash:
+        patched: '2019-07-05T03:06:27.567Z'
+    - pcca-verifier > snyk > snyk-nodejs-lockfile-parser > graphlib > lodash:
+        patched: '2019-07-05T03:06:27.567Z'
+    - pcca-verifier > snyk > @snyk/dep-graph > graphlib > lodash:
+        patched: '2019-07-05T03:06:27.567Z'
+    - pcca-verifier > snyk > snyk-go-plugin > graphlib > lodash:
+        patched: '2019-07-05T03:06:27.567Z'
+    - snyk > @snyk/dep-graph > graphlib > lodash:
+        patched: '2019-07-05T03:06:27.567Z'
