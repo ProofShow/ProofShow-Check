@@ -1,7 +1,7 @@
 ## ProofShow Check
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![Known Vulnerabilities](https://snyk.io/test/github/ProofShow/ProofShowCheck/badge.svg?targetFile=package.json)](https://snyk.io/test/github/ProofShow/ProofShowCheck?targetFile=package.json)
-[![Build Status](https://travis-ci.com/ProofShow/ProofShowCheck.svg?branch=master)](https://travis-ci.com/ProofShow/ProofShowCheck)
+[![Known Vulnerabilities](https://snyk.io//test/github/ProofShow/ProofShow-Check/badge.svg?targetFile=package.json)](https://snyk.io//test/github/ProofShow/ProofShow-Check?targetFile=package.json)
+[![Build Status](https://travis-ci.com/ProofShow/ProofShow-Check.svg?branch=master)](https://travis-ci.com/ProofShow/ProofShow-Check)
 
 ProofShow Check is a desktop app for courier companies and their customers to check the validity of the digital return receipts signed with ProofShow Ack mobile app. Specifically, ProofShow Check, once launched, will do the following:
 - Ask for the unique `receiptID` of a return receipt;
