@@ -73,6 +73,22 @@ async function loadSettingData() {
  }
 
 /**
+ * Normalize the input tracking number
+ */
+function nomalizeTrackingNum(courier, trackingNumber) {
+  var normalizedNum = trackingNumber.replace(/[^a-zA-Z0-9]/g, "");
+
+  switch(courier) {
+    case '2':
+      // normalize Fedex tracking number
+      normalizedNum = normalizedNum.padStart(14, '0');
+      break;
+  }
+
+  return normalizedNum;
+}
+
+/**
  *  Retrieve the PSES data
  */
 async function retrievePSES() {
@@ -225,7 +241,7 @@ async function initApp() {
       ipcMain.on('proc-with-tracking-number', async function(event, courier, trackingNum, email) {
         try {
           // get receipt information by tracking number
-          var receiptInfo = await receiptRetriever.byTrackingNum(courier, trackingNum, email);
+          var receiptInfo = await receiptRetriever.byTrackingNum(courier, nomalizeTrackingNum(courier, trackingNum), email);
           await checkReceipt(receiptInfo);
 
           setTimeout(function() {
